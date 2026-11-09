@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Shared recipe</title>
+<meta property="og:title" content="A recipe shared from Recipe Hoarder">
+<meta property="og:description" content="Open this link in Recipe Hoarder to save the recipe, or read it here.">
+<style>
+  :root { --bg: #fbf8f3; --fg: #1f1b16; --muted: #6b625a; --accent: #b4410e; --card: #fff; --line: #e8e1d8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1b1f; --fg: #ece6df; --muted: #a59d95; --accent: #ffb596; --card: #25252a; --line: #3a3a40; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.7rem; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.15rem; margin: 28px 0 8px; }
+  h3 { font-size: 1rem; color: var(--accent); margin: 16px 0 4px; }
+  .meta { color: var(--muted); margin: 0 0 4px; }
+  a { color: var(--accent); }
+  ul, ol { padding-left: 1.3em; }
+  li { margin: 4px 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
+  button { font: inherit; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+  .error { color: #b3261e; }
+</style>
+</head>
+<body>
+<main>
+  <div id="app"><p>Opening the recipe…</p></div>
+</main>
+<script>
+  // Recipe links (blueprint 6.11): https://<host>/r#1.<data>, where <data> is the recipe JSON,
+  // zlib-compressed and base64url-encoded. It is decoded here, in the browser: the part after "#"
+  // never reaches the server. Everything is inserted as text, never as HTML.
+  const MAX_BYTES = 256 * 1024;
+  const app = document.getElementById("app");
+
+  function el(tag, text, attrs) {
+    const node = document.createElement(tag);
+    if (text != null) node.textContent = text;
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    return node;
+  }
+
+  function safeHttpUrl(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+    } catch { return null; }
+  }
+
+  function minutes(m) {
+    const h = Math.floor(m / 60), r = m % 60;
+    return [h ? h + " hr" : "", r ? r + " min" : ""].filter(Boolean).join(" ");
+  }
+
+  async function decode(hash) {
+    const match = /^#(\d+)\.([A-Za-z0-9_-]+)$/.exec(hash);
+    if (!match) throw new Error("This isn't a complete recipe link.");
+    if (match[1] !== "1") throw new Error("This link was made by a newer version of the app.");
+    const b64 = match[2].replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > MAX_BYTES) throw new Error("This recipe link is too large to open.");
+      chunks.push(value);
+    }
+    const all = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) { all.set(c, offset); offset += c.length; }
+    const recipe = JSON.parse(new TextDecoder().decode(all));
+    if (typeof recipe.t !== "string" || !Array.isArray(recipe.i)) throw new Error("This recipe link isn't valid.");
+    return recipe;
+  }
+
+  function sections(list, ordered) {
+    const frag = document.createDocumentFragment();
+    let n = 0;
+    for (const s of list || []) {
+      if (s.n) frag.append(el("h3", s.n));
+      const listEl = el(ordered ? "ol" : "ul");
+      if (ordered) listEl.setAttribute("start", String(n + 1));
+      for (const item of s.x || []) { listEl.append(el("li", String(item))); n++; }
+      frag.append(listEl);
+    }
+    return frag;
+  }
+
+  function render(r) {
+    document.title = r.t;
+    app.replaceChildren();
+    app.append(el("h1", r.t));
+    const source = safeHttpUrl(r.u);
+    const site = source ? new URL(source).hostname.replace(/^www\./, "") : "";
+    const meta = el("p", null, { class: "meta" });
+    if (source) meta.append(el("a", site, { href: source, rel: "noopener noreferrer" }));
+    if (r.a) meta.append(document.createTextNode((source ? " · " : "") + "by " + r.a));
+    app.append(meta);
+    const extra = [r.y ? "Makes " + r.y : "", r.pm ? "Prep " + minutes(r.pm) : "", r.cm ? "Cook " + minutes(r.cm) : "", r.tm ? "Total " + minutes(r.tm) : ""].filter(Boolean);
+    if (extra.length) app.append(el("p", extra.join(" · "), { class: "meta" }));
+
+    const card = el("div", null, { class: "card" });
+    card.append(el("p", "Have Recipe Hoarder? Copy this page's link, then tap Paste link in the app to save the recipe."));
+    const copy = el("button", "Copy link");
+    copy.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(location.href); copy.textContent = "Copied"; } catch { copy.textContent = "Copy the address bar instead"; }
+    });
+    card.append(copy);
+    app.append(card);
+
+    app.append(el("h2", "Ingredients"), sections(r.i, false));
+    app.append(el("h2", "Steps"));
+    if (r.st && r.st.length) app.append(sections(r.st, true));
+    else app.append(el("p", "The steps weren't in the original page's recipe data. See the original page.", { class: "meta" }));
+    if (source) {
+      const p = el("p", "Original recipe: ");
+      p.append(el("a", source, { href: source, rel: "noopener noreferrer" }));
+      app.append(p);
+    }
+  }
+
+  (async () => {
+    if (!("DecompressionStream" in window)) {
+      app.replaceChildren(el("p", "This browser is too old to open recipe links. Open the link in Recipe Hoarder instead.", { class: "error" }));
+      return;
+    }
+    try {
+      render(await decode(location.hash));
+    } catch (e) {
+      app.replaceChildren(el("h1", "Couldn't open this recipe link"), el("p", e && e.message ? e.message : "The link is damaged.", { class: "error" }));
+    }
+  })();
+</script>
+</body>
+</html>

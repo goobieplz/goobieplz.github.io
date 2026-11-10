@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Shared recipe</title>
-<meta property="og:title" content="A recipe shared from Recipe Hoarder">
-<meta property="og:description" content="Open this link in Recipe Hoarder to save the recipe, or read it here.">
+<meta property="og:title" content="A recipe shared from Recipe Goblin">
+<meta property="og:description" content="Open this link in Recipe Goblin to save the recipe, or read it here.">
 <style>
-  :root { --bg: #fbf8f3; --fg: #1f1b16; --muted: #6b625a; --accent: #b4410e; --card: #fff; --line: #e8e1d8; }
+  /* Goblin Kitchen (art/goblin-kitchen/ui-theme.png): parchment by day, the night sky after dark. */
+  :root { --bg: #f3e7cb; --fg: #3a2216; --muted: #6a4a32; --accent: #a0490e; --card: #f7e8c8; --line: #1a0d18; --edge: #d9c49a; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #1b1b1f; --fg: #ece6df; --muted: #a59d95; --accent: #ffb596; --card: #25252a; --line: #3a3a40; }
+    :root { --bg: #0a1430; --fg: #f7e8c8; --muted: #b8c4dc; --accent: #f6be62; --card: #14294a; --line: #1a0d18; --edge: #0a1430; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -22,9 +23,16 @@
   a { color: var(--accent); }
   ul, ol { padding-left: 1.3em; }
   li { margin: 4px 0; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
-  button { font: inherit; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+  .card { background: var(--card); border: 2px solid var(--line); border-bottom-width: 2px; box-shadow: inset 0 -4px 0 var(--edge); border-radius: 4px; padding: 14px 16px 18px; margin: 16px 0; }
+  button { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 3px; border: 2px solid #1a0d18; background: #e8862f; color: #2a1208; box-shadow: inset 0 -4px 0 #b3561c; cursor: pointer; }
   .error { color: #b3261e; }
+  .photo { margin: -24px -16px 20px; aspect-ratio: 16 / 10; overflow: hidden; background: var(--card); border-radius: 0 0 6px 6px; }
+  .photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter .5s ease, transform .5s ease; }
+  .photo img.soft { filter: blur(5px); transform: scale(1.06); }
+  @media (min-width: 712px) { .photo { margin: 0 0 20px; border: 2px solid var(--line); border-radius: 6px; } }
+  .card.app { display: flex; gap: 14px; align-items: center; }
+  .goblin { width: 64px; height: 64px; flex: none; image-rendering: pixelated; border: 2px solid #1a0d18; border-radius: 4px; }
+  .card.app p { margin: 0 0 8px; }
 </style>
 </head>
 <body>
@@ -36,6 +44,8 @@
   // zlib-compressed and base64url-encoded. It is decoded here, in the browser: the part after "#"
   // never reaches the server. Everything is inserted as text, never as HTML.
   const MAX_BYTES = 256 * 1024;
+  // The Recipe Goblin mascot: the pixel portrait from the app icon, written in by art/pixel_art.py.
+  const GOBLIN = '<img class="goblin" src="data:image/png;base64,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" alt="">';
   const app = document.getElementById("app");
 
   function el(tag, text, attrs) {
@@ -43,6 +53,32 @@
     if (text != null) node.textContent = text;
     for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
     return node;
+  }
+
+  function safeHttpsUrl(value) {
+    const url = safeHttpUrl(value);
+    return url && url.startsWith("https:") ? url : null;
+  }
+
+  // The link's photo: its small thumbnail at once (soft), then the full photo once it has loaded.
+  // The sender's own photo ("own") has no full version to fetch.
+  function photo(r) {
+    const thumb = typeof r.th === "string" && /^[A-Za-z0-9_-]{1,16384}$/.test(r.th) ? r.th.replace(/-/g, "+").replace(/_/g, "/") : null;
+    const thumbSrc = thumb ? "data:image/webp;base64," + thumb + "===".slice((thumb.length + 3) % 4) : null;
+    const full = r.own && thumbSrc ? null : safeHttpsUrl(r.img);
+    if (!thumbSrc && !full) return null;
+    const box = el("div", null, { class: "photo" });
+    const img = el("img", null, { alt: "", decoding: "async", referrerpolicy: "no-referrer" });
+    if (thumbSrc) { img.src = thumbSrc; img.className = "soft"; } else { img.src = full; }
+    if (full && thumbSrc) {
+      const sharp = new Image();
+      sharp.referrerPolicy = "no-referrer";
+      sharp.onload = () => { img.src = full; img.className = ""; };
+      sharp.src = full;
+    }
+    img.onerror = () => box.remove();
+    box.append(img);
+    return box;
   }
 
   function safeHttpUrl(value) {
@@ -98,29 +134,37 @@
   function render(r) {
     document.title = r.t;
     app.replaceChildren();
+    const pic = photo(r);
+    if (pic) app.append(pic);
     app.append(el("h1", r.t));
-    const source = safeHttpUrl(r.u);
+    // A recipe the sender wrote has a made-up source on a host that can't exist (core: OwnRecipes): no page to link to.
+    const own = !!r.u && /^https:\/\/own\.recipegoblin\.invalid\//.test(r.u);
+    const source = own ? null : safeHttpUrl(r.u);
     const site = source ? new URL(source).hostname.replace(/^www\./, "") : "";
     const meta = el("p", null, { class: "meta" });
     if (source) meta.append(el("a", site, { href: source, rel: "noopener noreferrer" }));
-    if (r.a) meta.append(document.createTextNode((source ? " · " : "") + "by " + r.a));
+    if (own) meta.append(document.createTextNode("A home-made recipe"));
+    if (r.a) meta.append(document.createTextNode((source || own ? " · " : "") + "by " + r.a));
     app.append(meta);
     const extra = [r.y ? "Makes " + r.y : "", r.pm ? "Prep " + minutes(r.pm) : "", r.cm ? "Cook " + minutes(r.cm) : "", r.tm ? "Total " + minutes(r.tm) : ""].filter(Boolean);
     if (extra.length) app.append(el("p", extra.join(" · "), { class: "meta" }));
 
-    const card = el("div", null, { class: "card" });
-    card.append(el("p", "Have Recipe Hoarder? Copy this page's link, then tap Paste link in the app to save the recipe."));
+    const card = el("div", null, { class: "card app" });
+    card.insertAdjacentHTML("afterbegin", GOBLIN); // the app's own artwork, never anything from the link
+    const side = el("div");
+    side.append(el("p", "Have Recipe Goblin? Copy this page's link, then tap Paste link in the app to save the recipe."));
     const copy = el("button", "Copy link");
     copy.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(location.href); copy.textContent = "Copied"; } catch { copy.textContent = "Copy the address bar instead"; }
     });
-    card.append(copy);
+    side.append(copy);
+    card.append(side);
     app.append(card);
 
     app.append(el("h2", "Ingredients"), sections(r.i, false));
     app.append(el("h2", "Steps"));
     if (r.st && r.st.length) app.append(sections(r.st, true));
-    else app.append(el("p", "The steps weren't in the original page's recipe data. See the original page.", { class: "meta" }));
+    else app.append(el("p", own ? "No steps written down yet." : "The steps weren't in the original page's recipe data. See the original page.", { class: "meta" }));
     if (source) {
       const p = el("p", "Original recipe: ");
       p.append(el("a", source, { href: source, rel: "noopener noreferrer" }));
@@ -130,7 +174,7 @@
 
   (async () => {
     if (!("DecompressionStream" in window)) {
-      app.replaceChildren(el("p", "This browser is too old to open recipe links. Open the link in Recipe Hoarder instead.", { class: "error" }));
+      app.replaceChildren(el("p", "This browser is too old to open recipe links. Open the link in Recipe Goblin instead.", { class: "error" }));
       return;
     }
     try {

@@ -24,7 +24,9 @@
   ul, ol { padding-left: 1.3em; }
   li { margin: 4px 0; }
   .card { background: var(--card); border: 2px solid var(--line); border-bottom-width: 2px; box-shadow: inset 0 -4px 0 var(--edge); border-radius: 4px; padding: 14px 16px 18px; margin: 16px 0; }
-  button { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 3px; border: 2px solid #1a0d18; background: #e8862f; color: #2a1208; box-shadow: inset 0 -4px 0 #b3561c; cursor: pointer; }
+  button, a.button { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 3px; border: 2px solid #1a0d18; background: #e8862f; color: #2a1208; box-shadow: inset 0 -4px 0 #b3561c; cursor: pointer; }
+  a.button { display: inline-block; text-decoration: none; }
+  .address { overflow-wrap: anywhere; }
   .error { color: #b3261e; }
   .photo { margin: -24px -16px 20px; aspect-ratio: 16 / 10; overflow: hidden; background: var(--card); border-radius: 0 0 6px 6px; }
   .photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter .5s ease, transform .5s ease; }
@@ -45,7 +47,7 @@
   // never reaches the server. Everything is inserted as text, never as HTML.
   const MAX_BYTES = 256 * 1024;
   // The Recipe Goblin mascot: the pixel portrait from the app icon, written in by art/pixel_art.py.
-  const GOBLIN = '<img class="goblin" src="data:image/png;base64,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" alt="">';
+  const GOBLIN = '<img class="goblin" src="data:image/png;base64,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" alt="">';
   const app = document.getElementById("app");
 
   function el(tag, text, attrs) {
@@ -148,18 +150,7 @@
     app.append(meta);
     const extra = [r.y ? "Makes " + r.y : "", r.pm ? "Prep " + minutes(r.pm) : "", r.cm ? "Cook " + minutes(r.cm) : "", r.tm ? "Total " + minutes(r.tm) : ""].filter(Boolean);
     if (extra.length) app.append(el("p", extra.join(" · "), { class: "meta" }));
-
-    const card = el("div", null, { class: "card app" });
-    card.insertAdjacentHTML("afterbegin", GOBLIN); // the app's own artwork, never anything from the link
-    const side = el("div");
-    side.append(el("p", "Have Recipe Goblin? Copy this page's link, then tap Paste link in the app to save the recipe."));
-    const copy = el("button", "Copy link");
-    copy.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(location.href); copy.textContent = "Copied"; } catch { copy.textContent = "Copy the address bar instead"; }
-    });
-    side.append(copy);
-    card.append(side);
-    app.append(card);
+    app.append(appCard());
 
     app.append(el("h2", "Ingredients"), sections(r.i, false));
     app.append(el("h2", "Steps"));
@@ -172,7 +163,43 @@
     }
   }
 
+  // How to save it in the app: this page's own link, pasted in.
+  function appCard() {
+    const card = el("div", null, { class: "card app" });
+    card.insertAdjacentHTML("afterbegin", GOBLIN); // the app's own artwork, never anything from the link
+    const side = el("div");
+    side.append(el("p", "Have Recipe Goblin? Copy this page's link, then tap Paste link in the app to save the recipe."));
+    const copy = el("button", "Copy link");
+    copy.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(location.href); copy.textContent = "Copied"; } catch { copy.textContent = "Copy the address bar instead"; }
+    });
+    side.append(copy);
+    card.append(side);
+    return card;
+  }
+
+  // Page links (blueprint 6.49): https://<host>/r#p=<a page's address, its "https://" left off>.
+  // The app reads the recipe from that page; here, the way to it, its address in full. Never a
+  // redirect: a link that forwarded on its own would lend this site's name to any page at all.
+  function pageAddress(hash) {
+    const match = /^#p=(.+)$/.exec(hash);
+    if (!match) return null;
+    return safeHttpUrl(/^https?:\/\//i.test(match[1]) ? match[1] : "https://" + match[1]);
+  }
+
+  function renderPage(url) {
+    const site = new URL(url).hostname.replace(/^www\./, "");
+    document.title = "A recipe from " + site;
+    const address = el("p", null, { class: "meta address" });
+    address.append(el("a", url, { href: url, rel: "noopener noreferrer" }));
+    const open = el("p");
+    open.append(el("a", "Open the recipe", { href: url, rel: "noopener noreferrer", class: "button" }));
+    app.replaceChildren(el("h1", "A recipe from " + site), address, open, appCard());
+  }
+
   (async () => {
+    const page = pageAddress(location.hash);
+    if (page) return renderPage(page);
     if (!("DecompressionStream" in window)) {
       app.replaceChildren(el("p", "This browser is too old to open recipe links. Open the link in Recipe Goblin instead.", { class: "error" }));
       return;
